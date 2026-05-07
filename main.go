@@ -37,7 +37,7 @@ func main() {
 	fmt.Printf("Using yt-dlp at: %s\n", ytDlpPath)
 
 	// Check if deno is installed.
-	denoFound, _ := deps.CheckDeno()
+	denoFound, denoPath := deps.CheckDeno()
 	if !denoFound {
 		fmt.Println("deno not found. Downloading...")
 		if err := deps.DownloadDeno(); err != nil {
@@ -45,18 +45,19 @@ func main() {
 			os.Exit(1)
 		}
 		if runtime.GOOS == "windows" {
-			fmt.Printf("Using deno at: .\\deno.exe\n")
+			denoPath = ".\\deno.exe"
 		} else {
-			fmt.Printf("Using deno at: ./deno\n")
+			denoPath = "./deno"
 		}
 	}
+	fmt.Printf("Using deno at: %s\n", denoPath)
 
 	// Get the Downloads directory.
 	savePath := utils.GetDownloadsDir()
 	fmt.Printf("Saving to: %s\n", savePath)
 
 	// Download the video.
-	if err := video.Download(url, ytDlpPath, savePath); err != nil {
+	if err := video.Download(url, ytDlpPath, savePath, denoPath); err != nil {
 		fmt.Printf("❌ Failed to download video: %v\n", err)
 		os.Exit(1)
 	}
