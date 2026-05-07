@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
 
 	"github.com/abdulrahmanhossam/qget/internal/deps"
+	"github.com/abdulrahmanhossam/qget/internal/utils"
 	"github.com/abdulrahmanhossam/qget/internal/video"
 )
 
@@ -20,36 +20,44 @@ func main() {
 	// Get the URL from the first command-line argument.
 	url := os.Args[1]
 
-	// Check if yt-dlp is already installed.
+	// Check if yt-dlp is installed.
 	found, ytDlpPath := deps.CheckYTDLP()
-
 	if !found {
-		// If not found, download it automatically.
 		fmt.Println("yt-dlp not found. Downloading...")
-
 		if err := deps.DownloadYTDLP(); err != nil {
 			fmt.Printf("❌ Failed to download yt-dlp: %v\n", err)
 			os.Exit(1)
 		}
-
-		// Determine the path for the newly downloaded yt-dlp.
 		if runtime.GOOS == "windows" {
 			ytDlpPath = ".\\yt-dlp.exe"
 		} else {
 			ytDlpPath = "./yt-dlp"
 		}
 	}
+	fmt.Printf("Using yt-dlp at: %s\n", ytDlpPath)
 
-	// Get the absolute path of the yt-dlp executable.
-	absPath, err := filepath.Abs(ytDlpPath)
-	if err != nil {
-		absPath = ytDlpPath
+	// Check if deno is installed.
+	denoFound, denoPath := deps.CheckDeno()
+	if !denoFound {
+		fmt.Println("deno not found. Downloading...")
+		if err := deps.DownloadDeno(); err != nil {
+			fmt.Printf("❌ Failed to download deno: %v\n", err)
+			os.Exit(1)
+		}
+		if runtime.GOOS == "windows" {
+			denoPath = ".\\deno.exe"
+		} else {
+			denoPath = "./deno"
+		}
 	}
+	fmt.Printf("Using deno at: %s\n", denoPath)
 
-	fmt.Printf("Using yt-dlp at: %s\n", absPath)
+	// Get the Downloads directory.
+	savePath := utils.GetDownloadsDir()
+	fmt.Printf("Saving to: %s\n", savePath)
 
 	// Download the video.
-	if err := video.Download(url, absPath); err != nil {
+	if err := video.Download(url, ytDlpPath, savePath, denoPath); err != nil {
 		fmt.Printf("❌ Failed to download video: %v\n", err)
 		os.Exit(1)
 	}
