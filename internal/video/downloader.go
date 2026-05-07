@@ -3,13 +3,16 @@ package video
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 // Download downloads a video from the given URL using yt-dlp.
 // ytDlpPath is the full path to the yt-dlp executable.
-func Download(url string, ytDlpPath string) error {
-	// Create a new command that runs yt-dlp with the given URL.
-	cmd := exec.Command(ytDlpPath, url)
+// savePath is the directory where the video will be saved.
+func Download(url string, ytDlpPath string, savePath string) error {
+	// Create the yt-dlp command with output flag.
+	output := filepath.Join(savePath, "%(title)s.%(ext)s")
+	cmd := exec.Command(ytDlpPath, "-o", output, url)
 
 	// Set stdout and stderr to the terminal so progress is visible.
 	cmd.Stdout = os.Stdout
