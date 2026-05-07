@@ -12,7 +12,7 @@ import (
 // denoPath is the path to the deno executable for JS processing.
 func Download(url string, ytDlpPath string, savePath string, denoPath string) error {
 	output := filepath.Join(savePath, "%(title)s.%(ext)s")
-	cmd := exec.Command(ytDlpPath, "--js-runtimes", denoPath, "-o", output, url)
+	cmd := exec.Command(ytDlpPath, "--js-runtimes", "deno:"+denoPath, "-o", output, url)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
