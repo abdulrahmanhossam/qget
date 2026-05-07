@@ -57,7 +57,7 @@ func main() {
 	fmt.Printf("Saving to: %s\n", savePath)
 
 	// Download the video.
-	if err := video.Download(url, ytDlpPath, savePath, denoPath); err != nil {
+	if err := video.Download(url, ytDlpPath, savePath); err != nil {
 		fmt.Printf("❌ Failed to download video: %v\n", err)
 		os.Exit(1)
 	}
