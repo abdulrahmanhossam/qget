@@ -51,11 +51,10 @@ func DownloadYTDLP() error {
 		}
 	}
 
-	fmt.Printf("✅ yt-dlp downloaded successfully as: %s\n", filename)
+	fmt.Printf("yt-dlp downloaded successfully as: %s\n", filename)
 	return nil
 }
 
-// DownloadDeno automatically downloads the deno binary from GitHub.
 func DownloadDeno() error {
 	var url string
 	if runtime.GOOS == "windows" {
@@ -118,10 +117,11 @@ func DownloadDeno() error {
 				os.Chmod(file.Name, 0755)
 			}
 
-			fmt.Printf("✅ deno extracted successfully\n")
+			fmt.Printf("deno extracted successfully\n")
 			return nil
 		}
 	}
 
 	return fmt.Errorf("deno binary not found in zip")
 }
+
