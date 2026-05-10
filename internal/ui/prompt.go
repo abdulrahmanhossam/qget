@@ -7,6 +7,8 @@ import (
 	"github.com/abdulrahmanhossam/qget/internal/video"
 )
 
+// SelectFormat displays an interactive dropdown for users to choose a video format.
+// It filters out non-video formats (audio-only, mhtml) and only shows mp4/webm.
 func SelectFormat(formats []video.Format) (string, error) {
 	options := []string{}
 	optionToID := map[string]string{}
@@ -35,4 +37,17 @@ func SelectFormat(formats []video.Format) (string, error) {
 	}
 
 	return optionToID[selected], nil
+}
+
+// ConfirmPlaylist asks the user whether they want to download an entire playlist.
+func ConfirmPlaylist() (bool, error) {
+	var confirm bool
+	err := survey.AskOne(&survey.Confirm{
+		Message: "This URL contains a playlist. Do you want to download the entire playlist at the best quality?",
+		Default: false,
+	}, &confirm)
+	if err != nil {
+		return false, err
+	}
+	return confirm, nil
 }
