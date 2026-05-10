@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/abdulrahmanhossam/qget/internal/deps"
 	"github.com/abdulrahmanhossam/qget/internal/ui"
@@ -52,6 +53,38 @@ func main() {
 	savePath := utils.GetDownloadsDir()
 	fmt.Printf("Saving to: %s\n", savePath)
 
+	// Detect if URL contains a playlist (YouTube "list=" parameter).
+	isPlaylist := strings.Contains(url, "list=")
+
+	// Branch logic: playlist download vs single video download.
+	if isPlaylist {
+		// Ask user to confirm playlist download.
+		confirm, err := ui.ConfirmPlaylist()
+		if err != nil {
+			fmt.Printf("Failed to confirm playlist: %v\n", err)
+			os.Exit(1)
+		}
+
+		if confirm {
+			// Download entire playlist at best quality (skip quality selection).
+			fmt.Println("🚀 Starting playlist download (Best Quality)...")
+			if err := video.Download(url, ytDlpPath, denoPath, savePath, "best", true); err != nil {
+				fmt.Printf("Failed to download playlist: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Println("Download complete!")
+			return
+		}
+
+		// User declined playlist: check if this is a pure playlist URL (no video ID).
+		hasVideoID := strings.Contains(url, "watch?v=") || strings.Contains(url, "youtu.be/")
+		if !hasVideoID {
+			fmt.Println("Error: This is a playlist-only URL. There is no single video to fetch qualities for.")
+			os.Exit(1)
+		}
+	}
+
+	// Single video flow: fetch video info and let user select quality.
 	fmt.Println("⏳ Fetching video qualities... Please wait.")
 	info, err := video.GetVideoInfo(url, ytDlpPath, denoPath)
 	if err != nil {
@@ -67,7 +100,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := video.Download(url, ytDlpPath, denoPath, savePath, formatID); err != nil {
+	if err := video.Download(url, ytDlpPath, denoPath, savePath, formatID, false); err != nil {
 		fmt.Printf("Failed to download video: %v\n", err)
 		os.Exit(1)
 	}
