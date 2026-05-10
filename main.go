@@ -75,6 +75,13 @@ func main() {
 			fmt.Println("Download complete!")
 			return
 		}
+
+		// User declined playlist: check if this is a pure playlist URL (no video ID).
+		hasVideoID := strings.Contains(url, "watch?v=") || strings.Contains(url, "youtu.be/")
+		if !hasVideoID {
+			fmt.Println("❌ Error: This is a playlist-only URL. There is no single video to fetch qualities for.")
+			os.Exit(1)
+		}
 	}
 
 	// Single video flow: fetch video info and let user select quality.
