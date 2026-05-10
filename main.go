@@ -6,26 +6,24 @@ import (
 	"runtime"
 
 	"github.com/abdulrahmanhossam/qget/internal/deps"
+	"github.com/abdulrahmanhossam/qget/internal/ui"
 	"github.com/abdulrahmanhossam/qget/internal/utils"
 	"github.com/abdulrahmanhossam/qget/internal/video"
 )
 
 func main() {
-	// Check if the user provided a URL via command-line arguments.
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: qget <video-url>")
 		os.Exit(1)
 	}
 
-	// Get the URL from the first command-line argument.
 	url := os.Args[1]
 
-	// Check if yt-dlp is installed.
 	found, ytDlpPath := deps.CheckYTDLP()
 	if !found {
 		fmt.Println("yt-dlp not found. Downloading...")
 		if err := deps.DownloadYTDLP(); err != nil {
-			fmt.Printf("❌ Failed to download yt-dlp: %v\n", err)
+			fmt.Printf("Failed to download yt-dlp: %v\n", err)
 			os.Exit(1)
 		}
 		if runtime.GOOS == "windows" {
@@ -36,12 +34,11 @@ func main() {
 	}
 	fmt.Printf("Using yt-dlp at: %s\n", ytDlpPath)
 
-	// Check if deno is installed.
 	denoFound, denoPath := deps.CheckDeno()
 	if !denoFound {
 		fmt.Println("deno not found. Downloading...")
 		if err := deps.DownloadDeno(); err != nil {
-			fmt.Printf("❌ Failed to download deno: %v\n", err)
+			fmt.Printf("Failed to download deno: %v\n", err)
 			os.Exit(1)
 		}
 		if runtime.GOOS == "windows" {
@@ -52,15 +49,28 @@ func main() {
 	}
 	fmt.Printf("Using deno at: %s\n", denoPath)
 
-	// Get the Downloads directory.
 	savePath := utils.GetDownloadsDir()
 	fmt.Printf("Saving to: %s\n", savePath)
 
-	// Download the video.
-	if err := video.Download(url, ytDlpPath, savePath, denoPath); err != nil {
-		fmt.Printf("❌ Failed to download video: %v\n", err)
+	fmt.Println("⏳ Fetching video qualities... Please wait.")
+	info, err := video.GetVideoInfo(url, ytDlpPath, denoPath)
+	if err != nil {
+		fmt.Printf("Failed to get video info: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Println("✅ Download complete!")
+	fmt.Println("Video Title:", info.Title)
+
+	formatID, err := ui.SelectFormat(info.Formats)
+	if err != nil {
+		fmt.Printf("Failed to select format: %v\n", err)
+		os.Exit(1)
+	}
+
+	if err := video.Download(url, ytDlpPath, denoPath, savePath, formatID); err != nil {
+		fmt.Printf("Failed to download video: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Download complete!")
 }
