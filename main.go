@@ -50,6 +50,18 @@ func main() {
 	}
 	fmt.Printf("Using deno at: %s\n", denoPath)
 
+	ffmpegFound, ffmpegPath := deps.CheckFFmpeg()
+	if !ffmpegFound {
+		fmt.Println("FFmpeg not found. Downloading...")
+		downloadedPath, err := deps.DownloadFFmpeg()
+		if err != nil {
+			fmt.Printf("Failed to download FFmpeg: %v\n", err)
+			os.Exit(1)
+		}
+		ffmpegPath = downloadedPath
+	}
+	fmt.Printf("Using FFmpeg at: %s\n", ffmpegPath)
+
 	savePath := utils.GetDownloadsDir()
 	fmt.Printf("Saving to: %s\n", savePath)
 
@@ -68,7 +80,7 @@ func main() {
 		if confirm {
 			// Download entire playlist at best quality (skip quality selection).
 			fmt.Println("🚀 Starting playlist download (Best Quality)...")
-			if err := video.Download(url, ytDlpPath, denoPath, savePath, "best", true); err != nil {
+			if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, "best", true); err != nil {
 				fmt.Printf("Failed to download playlist: %v\n", err)
 				os.Exit(1)
 			}
@@ -100,7 +112,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := video.Download(url, ytDlpPath, denoPath, savePath, formatID, false); err != nil {
+	if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, formatID, false); err != nil {
 		fmt.Printf("Failed to download video: %v\n", err)
 		os.Exit(1)
 	}

@@ -51,6 +51,32 @@ func CheckDeno() (bool, string) {
 	return false, ""
 }
 
+// CheckFFmpeg checks if ffmpeg is available in the current directory or system PATH.
+func CheckFFmpeg() (bool, string) {
+	binaryName := "ffmpeg"
+	if runtime.GOOS == "windows" {
+		binaryName += ".exe"
+	}
+
+	if _, err := os.Stat(binaryName); err == nil {
+		absPath, err := filepath.Abs(binaryName)
+		if err == nil {
+			return true, absPath
+		}
+		if runtime.GOOS == "windows" {
+			return true, binaryName
+		}
+		return true, "./" + binaryName
+	}
+
+	path, err := exec.LookPath(binaryName)
+	if err == nil {
+		return true, path
+	}
+
+	return false, ""
+}
+
 // checkBinary checks if a binary exists in the current directory first, then in PATH.
 func checkBinary(binaryName string) (bool, string) {
 	// Check current working directory first.
