@@ -26,10 +26,16 @@ No installation or setup required!
 ### 🐧 Linux Users
 
 1. Download `qget-linux` from the [Releases](https://github.com/abdulrahmanhossam/qget/releases) page.
-2. Run these commands to make it globally executable:
+2. Navigate to the folder where you downloaded the file (typically `~/Downloads`) and run:
 
 ```bash
+# 1. Navigate to where you downloaded the file
+cd ~/Downloads
+
+# 2. Make it executable
 chmod +x qget-linux
+
+# 3. Move it to your global bin directory
 sudo mv qget-linux /usr/local/bin/qget
 ```
 
