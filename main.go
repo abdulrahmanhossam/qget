@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 
 	"github.com/abdulrahmanhossam/qget/internal/deps"
@@ -20,33 +19,27 @@ func main() {
 
 	url := os.Args[1]
 
-	found, ytDlpPath := deps.CheckYTDLP()
-	if !found {
+	ytDlpFound, ytDlpPath := deps.CheckYTDLP()
+	if !ytDlpFound {
 		fmt.Println("yt-dlp not found. Downloading...")
-		if err := deps.DownloadYTDLP(); err != nil {
+		downloadedPath, err := deps.DownloadYTDLP()
+		if err != nil {
 			fmt.Printf("Failed to download yt-dlp: %v\n", err)
 			os.Exit(1)
 		}
-		if runtime.GOOS == "windows" {
-			ytDlpPath = ".\\yt-dlp.exe"
-		} else {
-			ytDlpPath = "./yt-dlp"
-		}
+		ytDlpPath = downloadedPath
 	}
 	fmt.Printf("Using yt-dlp at: %s\n", ytDlpPath)
 
 	denoFound, denoPath := deps.CheckDeno()
 	if !denoFound {
 		fmt.Println("deno not found. Downloading...")
-		if err := deps.DownloadDeno(); err != nil {
+		downloadedPath, err := deps.DownloadDeno()
+		if err != nil {
 			fmt.Printf("Failed to download deno: %v\n", err)
 			os.Exit(1)
 		}
-		if runtime.GOOS == "windows" {
-			denoPath = ".\\deno.exe"
-		} else {
-			denoPath = "./deno"
-		}
+		denoPath = downloadedPath
 	}
 	fmt.Printf("Using deno at: %s\n", denoPath)
 
