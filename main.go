@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/abdulrahmanhossam/qget/internal/deps"
 	"github.com/abdulrahmanhossam/qget/internal/ui"
 	"github.com/abdulrahmanhossam/qget/internal/utils"
@@ -12,12 +13,24 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: qget <video-url>")
-		os.Exit(1)
-	}
+	var url string
 
-	url := os.Args[1]
+	if len(os.Args) > 1 {
+		url = os.Args[1]
+	} else {
+		fmt.Println("🔗 No URL provided. Launching interactive mode...")
+		prompt := &survey.Input{
+			Message: "🔗 Enter video or playlist URL:",
+		}
+		if err := survey.AskOne(prompt, &url); err != nil {
+			fmt.Println("❌ No URL provided. Exiting...")
+			os.Exit(0)
+		}
+		if url == "" {
+			fmt.Println("❌ No URL provided. Exiting...")
+			os.Exit(0)
+		}
+	}
 
 	ytDlpFound, ytDlpPath := deps.CheckYTDLP()
 	if !ytDlpFound {
