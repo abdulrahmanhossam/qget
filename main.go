@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/abdulrahmanhossam/qget/internal/deps"
@@ -13,6 +15,14 @@ import (
 )
 
 func main() {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sigChan
+		fmt.Println("\n⚠️ Interrupted by user. Exiting gracefully...")
+		os.Exit(0)
+	}()
+
 	var url string
 
 	if len(os.Args) > 1 {

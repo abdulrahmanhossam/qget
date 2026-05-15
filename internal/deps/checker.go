@@ -9,7 +9,7 @@ import (
 	"github.com/abdulrahmanhossam/qget/internal/utils"
 )
 
-// CheckYTDLP checks if yt-dlp is available in ~/.qget, current directory, or system PATH.
+// CheckYTDLP checks if yt-dlp is available in ~/.qget or system PATH.
 func CheckYTDLP() (bool, string) {
 	binaryName := "yt-dlp"
 	if runtime.GOOS == "windows" {
@@ -20,16 +20,12 @@ func CheckYTDLP() (bool, string) {
 	if err == nil {
 		localPath := filepath.Join(appDir, binaryName)
 		if _, err := os.Stat(localPath); err == nil {
-			absPath, _ := filepath.Abs(localPath)
-			return true, absPath
+			absPath, err := filepath.Abs(localPath)
+			if err == nil {
+				return true, absPath
+			}
+			return true, localPath
 		}
-	}
-
-	if _, err := os.Stat(binaryName); err == nil {
-		if runtime.GOOS == "windows" {
-			return true, binaryName
-		}
-		return true, "./" + binaryName
 	}
 
 	path, err := exec.LookPath(binaryName)
@@ -40,7 +36,7 @@ func CheckYTDLP() (bool, string) {
 	return false, ""
 }
 
-// CheckDeno checks if deno is available in ~/.qget, current directory, or system PATH.
+// CheckDeno checks if deno is available in ~/.qget or system PATH.
 func CheckDeno() (bool, string) {
 	binaryName := "deno"
 	if runtime.GOOS == "windows" {
@@ -51,16 +47,12 @@ func CheckDeno() (bool, string) {
 	if err == nil {
 		localPath := filepath.Join(appDir, binaryName)
 		if _, err := os.Stat(localPath); err == nil {
-			absPath, _ := filepath.Abs(localPath)
-			return true, absPath
+			absPath, err := filepath.Abs(localPath)
+			if err == nil {
+				return true, absPath
+			}
+			return true, localPath
 		}
-	}
-
-	if _, err := os.Stat(binaryName); err == nil {
-		if runtime.GOOS == "windows" {
-			return true, binaryName
-		}
-		return true, "./" + binaryName
 	}
 
 	path, err := exec.LookPath(binaryName)
@@ -71,7 +63,7 @@ func CheckDeno() (bool, string) {
 	return false, ""
 }
 
-// CheckFFmpeg checks if ffmpeg is available in ~/.qget, current directory, or system PATH.
+// CheckFFmpeg checks if ffmpeg is available in ~/.qget or system PATH.
 func CheckFFmpeg() (bool, string) {
 	binaryName := "ffmpeg"
 	if runtime.GOOS == "windows" {
@@ -82,39 +74,14 @@ func CheckFFmpeg() (bool, string) {
 	if err == nil {
 		localPath := filepath.Join(appDir, binaryName)
 		if _, err := os.Stat(localPath); err == nil {
-			absPath, _ := filepath.Abs(localPath)
-			return true, absPath
+			absPath, err := filepath.Abs(localPath)
+			if err == nil {
+				return true, absPath
+			}
+			return true, localPath
 		}
 	}
 
-	if _, err := os.Stat(binaryName); err == nil {
-		absPath, err := filepath.Abs(binaryName)
-		if err == nil {
-			return true, absPath
-		}
-		if runtime.GOOS == "windows" {
-			return true, binaryName
-		}
-		return true, "./" + binaryName
-	}
-
-	path, err := exec.LookPath(binaryName)
-	if err == nil {
-		return true, path
-	}
-
-	return false, ""
-}
-
-// checkBinary checks if a binary exists in the current directory first, then in PATH.
-func checkBinary(binaryName string) (bool, string) {
-	// Check current working directory first.
-	cwd := filepath.Join(".", binaryName)
-	if _, err := os.Stat(cwd); err == nil {
-		return true, cwd
-	}
-
-	// Fallback to system PATH.
 	path, err := exec.LookPath(binaryName)
 	if err == nil {
 		return true, path
