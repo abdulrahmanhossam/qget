@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/abdulrahmanhossam/qget/internal/deps"
 	"github.com/abdulrahmanhossam/qget/internal/ui"
 	"github.com/abdulrahmanhossam/qget/internal/utils"
@@ -13,40 +13,46 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: qget <video-url>")
-		os.Exit(1)
+	var url string
+
+	if len(os.Args) > 1 {
+		url = os.Args[1]
+	} else {
+		fmt.Println("🔗 No URL provided. Launching interactive mode...")
+		prompt := &survey.Input{
+			Message: "🔗 Enter video or playlist URL:",
+		}
+		if err := survey.AskOne(prompt, &url); err != nil {
+			fmt.Println("❌ No URL provided. Exiting...")
+			os.Exit(0)
+		}
+		if url == "" {
+			fmt.Println("❌ No URL provided. Exiting...")
+			os.Exit(0)
+		}
 	}
 
-	url := os.Args[1]
-
-	found, ytDlpPath := deps.CheckYTDLP()
-	if !found {
+	ytDlpFound, ytDlpPath := deps.CheckYTDLP()
+	if !ytDlpFound {
 		fmt.Println("yt-dlp not found. Downloading...")
-		if err := deps.DownloadYTDLP(); err != nil {
+		downloadedPath, err := deps.DownloadYTDLP()
+		if err != nil {
 			fmt.Printf("Failed to download yt-dlp: %v\n", err)
 			os.Exit(1)
 		}
-		if runtime.GOOS == "windows" {
-			ytDlpPath = ".\\yt-dlp.exe"
-		} else {
-			ytDlpPath = "./yt-dlp"
-		}
+		ytDlpPath = downloadedPath
 	}
 	fmt.Printf("Using yt-dlp at: %s\n", ytDlpPath)
 
 	denoFound, denoPath := deps.CheckDeno()
 	if !denoFound {
 		fmt.Println("deno not found. Downloading...")
-		if err := deps.DownloadDeno(); err != nil {
+		downloadedPath, err := deps.DownloadDeno()
+		if err != nil {
 			fmt.Printf("Failed to download deno: %v\n", err)
 			os.Exit(1)
 		}
-		if runtime.GOOS == "windows" {
-			denoPath = ".\\deno.exe"
-		} else {
-			denoPath = "./deno"
-		}
+		denoPath = downloadedPath
 	}
 	fmt.Printf("Using deno at: %s\n", denoPath)
 
