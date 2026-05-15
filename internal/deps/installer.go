@@ -10,9 +10,11 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/abdulrahmanhossam/qget/internal/utils"
 )
 
-// DownloadYTDLP automatically downloads the yt-dlp binary from GitHub.
+// DownloadYTDLP automatically downloads the yt-dlp binary from GitHub to ~/.qget.
 func DownloadYTDLP() error {
 	var url string
 	var filename string
@@ -24,6 +26,13 @@ func DownloadYTDLP() error {
 		url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
 		filename = "yt-dlp"
 	}
+
+	appDir, err := utils.GetAppDir()
+	if err != nil {
+		return fmt.Errorf("failed to get app directory: %w", err)
+	}
+
+	destPath := filepath.Join(appDir, filename)
 
 	fmt.Printf("Downloading yt-dlp from: %s\n", url)
 
@@ -37,7 +46,7 @@ func DownloadYTDLP() error {
 		return fmt.Errorf("failed to download yt-dlp: HTTP %d", resp.StatusCode)
 	}
 
-	file, err := os.Create(filename)
+	file, err := os.Create(destPath)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
@@ -49,12 +58,12 @@ func DownloadYTDLP() error {
 	}
 
 	if runtime.GOOS != "windows" {
-		if err := os.Chmod(filename, 0755); err != nil {
+		if err := os.Chmod(destPath, 0755); err != nil {
 			return fmt.Errorf("failed to set permissions: %w", err)
 		}
 	}
 
-	fmt.Printf("yt-dlp downloaded successfully as: %s\n", filename)
+	fmt.Printf("yt-dlp downloaded successfully to: %s\n", destPath)
 	return nil
 }
 
@@ -64,6 +73,11 @@ func DownloadDeno() error {
 		url = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip"
 	} else {
 		url = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip"
+	}
+
+	appDir, err := utils.GetAppDir()
+	if err != nil {
+		return fmt.Errorf("failed to get app directory: %w", err)
 	}
 
 	fmt.Printf("Downloading deno from: %s\n", url)
@@ -97,6 +111,12 @@ func DownloadDeno() error {
 	}
 	defer zipFile.Close()
 
+	binaryName := "deno"
+	if runtime.GOOS == "windows" {
+		binaryName = "deno.exe"
+	}
+	destPath := filepath.Join(appDir, binaryName)
+
 	for _, file := range zipFile.File {
 		if file.Name == "deno" || file.Name == "deno.exe" {
 			rc, err := file.Open()
@@ -105,7 +125,7 @@ func DownloadDeno() error {
 			}
 			defer rc.Close()
 
-			outFile, err := os.Create(file.Name)
+			outFile, err := os.Create(destPath)
 			if err != nil {
 				return fmt.Errorf("failed to create deno: %w", err)
 			}
@@ -117,10 +137,10 @@ func DownloadDeno() error {
 			}
 
 			if runtime.GOOS != "windows" {
-				os.Chmod(file.Name, 0755)
+				os.Chmod(destPath, 0755)
 			}
 
-			fmt.Printf("deno extracted successfully\n")
+			fmt.Printf("deno extracted successfully to: %s\n", destPath)
 			return nil
 		}
 	}
@@ -128,7 +148,7 @@ func DownloadDeno() error {
 	return fmt.Errorf("deno binary not found in zip")
 }
 
-// DownloadFFmpeg automatically downloads the ffmpeg binary from GitHub.
+// DownloadFFmpeg automatically downloads the ffmpeg binary from GitHub to ~/.qget.
 func DownloadFFmpeg() (string, error) {
 	var url string
 	var filename string
@@ -140,6 +160,13 @@ func DownloadFFmpeg() (string, error) {
 		url = "https://github.com/yt-dlp/FFmpeg-Builds/releases/latest/download/ffmpeg-master-latest-linux64-gpl.tar.xz"
 		filename = "ffmpeg.tar.xz"
 	}
+
+	appDir, err := utils.GetAppDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to get app directory: %w", err)
+	}
+
+	destPath := filepath.Join(appDir, filename)
 
 	fmt.Printf("Downloading FFmpeg from: %s\n", url)
 
@@ -153,7 +180,7 @@ func DownloadFFmpeg() (string, error) {
 		return "", fmt.Errorf("failed to download FFmpeg: HTTP %d", resp.StatusCode)
 	}
 
-	file, err := os.Create(filename)
+	file, err := os.Create(destPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to create file: %w", err)
 	}
@@ -168,30 +195,26 @@ func DownloadFFmpeg() (string, error) {
 	fmt.Println("Download complete. Extracting...")
 
 	if runtime.GOOS == "windows" {
-		if err := extractFFmpegWindows(filename); err != nil {
+		if err := extractFFmpegWindows(destPath, appDir); err != nil {
 			return "", err
 		}
 	} else {
-		if err := extractFFmpegLinux(filename); err != nil {
+		if err := extractFFmpegLinux(destPath, appDir); err != nil {
 			return "", err
 		}
 	}
 
-	os.Remove(filename)
+	os.Remove(destPath)
 	fmt.Println("FFmpeg extracted successfully")
 
-	ffmpegPath := "./ffmpeg"
+	ffmpegPath := filepath.Join(appDir, "ffmpeg")
 	if runtime.GOOS == "windows" {
-		ffmpegPath = ".\\ffmpeg.exe"
+		ffmpegPath = filepath.Join(appDir, "ffmpeg.exe")
 	}
-	absPath, err := filepath.Abs(ffmpegPath)
-	if err != nil {
-		return ffmpegPath, nil
-	}
-	return absPath, nil
+	return ffmpegPath, nil
 }
 
-func extractFFmpegWindows(zipPath string) error {
+func extractFFmpegWindows(zipPath, destDir string) error {
 	zipFile, err := zip.OpenReader(zipPath)
 	if err != nil {
 		return fmt.Errorf("failed to open zip: %w", err)
@@ -206,7 +229,7 @@ func extractFFmpegWindows(zipPath string) error {
 			}
 			defer rc.Close()
 
-			outFile, err := os.Create("ffmpeg.exe")
+			outFile, err := os.Create(filepath.Join(destDir, "ffmpeg.exe"))
 			if err != nil {
 				return fmt.Errorf("failed to create ffmpeg.exe: %w", err)
 			}
@@ -217,7 +240,7 @@ func extractFFmpegWindows(zipPath string) error {
 				return fmt.Errorf("failed to extract ffmpeg.exe: %w", err)
 			}
 
-			fmt.Println("Extracted ffmpeg.exe to current directory")
+			fmt.Println("Extracted ffmpeg.exe to ~/.qget")
 			return nil
 		}
 	}
@@ -225,13 +248,24 @@ func extractFFmpegWindows(zipPath string) error {
 	return fmt.Errorf("ffmpeg.exe not found in zip")
 }
 
-func extractFFmpegLinux(tarPath string) error {
+func extractFFmpegLinux(tarPath, destDir string) error {
+	origDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get current directory: %w", err)
+	}
+	defer os.Chdir(origDir)
+
+	tmpDir := filepath.Dir(tarPath)
+	if err := os.Chdir(tmpDir); err != nil {
+		return fmt.Errorf("failed to change to temp directory: %w", err)
+	}
+
 	cmd := exec.Command("tar", "-xf", tarPath)
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to extract tar: %w", err)
 	}
 
-	entries, err := os.ReadDir(".")
+	entries, err := os.ReadDir(tmpDir)
 	if err != nil {
 		return fmt.Errorf("failed to read directory: %w", err)
 	}
@@ -248,20 +282,19 @@ func extractFFmpegLinux(tarPath string) error {
 		return fmt.Errorf("extracted ffmpeg directory not found")
 	}
 
-	ffmpegBin := filepath.Join(extractedDir, "bin", "ffmpeg")
+	ffmpegBin := filepath.Join(tmpDir, extractedDir, "bin", "ffmpeg")
 	if _, err := os.Stat(ffmpegBin); err != nil {
 		return fmt.Errorf("ffmpeg binary not found in extracted folder: %w", err)
 	}
 
-	if err := os.Rename(ffmpegBin, "./ffmpeg"); err != nil {
+	if err := os.Rename(ffmpegBin, filepath.Join(destDir, "ffmpeg")); err != nil {
 		return fmt.Errorf("failed to move ffmpeg: %w", err)
 	}
 
-	os.Chmod("./ffmpeg", 0755)
+	os.Chmod(filepath.Join(destDir, "ffmpeg"), 0755)
 
-	os.RemoveAll(extractedDir)
+	os.RemoveAll(filepath.Join(tmpDir, extractedDir))
 
-	fmt.Println("Extracted ffmpeg to current directory")
+	fmt.Println("Extracted ffmpeg to ~/.qget")
 	return nil
 }
-
