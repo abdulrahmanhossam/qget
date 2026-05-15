@@ -1,4 +1,4 @@
-# qget - The Minimalist CLI Video Downloader
+# qget - CLI Video Downloader
 
 A Go-based CLI tool that simplifies video downloading with zero manual setup.
 
