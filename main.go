@@ -6,50 +6,51 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"unicode"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/abdulrahmanhossam/qget/internal/deps"
 	"github.com/abdulrahmanhossam/qget/internal/ui"
 	"github.com/abdulrahmanhossam/qget/internal/utils"
 	"github.com/abdulrahmanhossam/qget/internal/video"
+	"golang.org/x/text/unicode/bidi"
 )
 
-// arabicShaper handles RTL Arabic text shaping for terminal display.
-// It properly connects Arabic letters based on their contextual forms.
-func arabicShaper(text string) string {
+// sanitizeTitle removes non-printable, complex symbols, and emoji
+// that break terminal rendering, keeping alphanumeric, spaces, and basic punctuation.
+func sanitizeTitle(text string) string {
 	var result strings.Builder
-	runes := []rune(text)
-	wasArabic := false
-
-	for i := len(runes) - 1; i >= 0; i-- {
-		r := runes[i]
-		if isArabicRune(r) {
-			connected := shapeArabicChar(r, wasArabic && i > 0 && isArabicRune(runes[i-1]))
-			result.WriteRune(connected)
-			wasArabic = true
-		} else {
+	for _, r := range text {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsSpace(r) || r == '.' || r == '-' || r == '_' || r == '(' || r == ')' {
 			result.WriteRune(r)
-			wasArabic = false
 		}
+	}
+	return strings.TrimSpace(result.String())
+}
+
+// shapeArabicText handles RTL Arabic text for terminal display.
+func shapeArabicText(text string) string {
+	sanitized := sanitizeTitle(text)
+	if sanitized == "" {
+		return text
+	}
+
+	paragraph := &bidi.Paragraph{}
+	if _, err := paragraph.SetString(sanitized); err != nil {
+		return sanitized
+	}
+
+	ordering, err := paragraph.Order()
+	if err != nil {
+		return sanitized
+	}
+
+	var result strings.Builder
+	for i := 0; i < ordering.NumRuns(); i++ {
+		run := ordering.Run(i)
+		result.WriteString(run.String())
 	}
 	return result.String()
-}
-
-func isArabicRune(r rune) bool {
-	return r >= 0x0621 && r <= 0x064A
-}
-
-func shapeArabicChar(r rune, connectedToPrev bool) rune {
-	switch {
-	case r >= 0x0621 && r <= 0x063A:
-		return r
-	case r >= 0x0641 && r <= 0x064A:
-		if connectedToPrev {
-			return r + 0xFEE0 - 0x0620
-		}
-		return r
-	}
-	return r
 }
 
 func main() {
@@ -158,7 +159,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("Video Title:", arabicShaper(info.Title))
+	fmt.Println("Video Title:", shapeArabicText(info.Title))
 
 	formatID, err := ui.SelectFormat(info.Formats)
 	if err != nil {
