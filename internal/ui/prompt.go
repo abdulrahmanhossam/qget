@@ -67,3 +67,34 @@ func AskFormatType() (string, error) {
 	}
 	return "audio", nil
 }
+
+// SelectPlaylistQuality prompts the user to select a uniform quality for playlist downloads.
+func SelectPlaylistQuality() (string, error) {
+	var selected string
+	err := survey.AskOne(&survey.Select{
+		Message: "Select download quality for the entire playlist:",
+		Options: []string{
+			"🌟 Highest Available",
+			"🎬 1080p",
+			"📺 720p",
+			"💿 480p",
+			"📱 360p",
+		},
+	}, &selected)
+	if err != nil {
+		return "", err
+	}
+	switch selected {
+	case "🌟 Highest Available":
+		return "best", nil
+	case "🎬 1080p":
+		return "1080", nil
+	case "📺 720p":
+		return "720", nil
+	case "💿 480p":
+		return "480", nil
+	case "📱 360p":
+		return "360", nil
+	}
+	return "best", nil
+}

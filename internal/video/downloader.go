@@ -42,7 +42,8 @@ func Download(url string, ytDlpPath string, denoPath string, ffmpegPath string, 
 	if isAudio {
 		args = append(args, "-x", "--audio-format", "mp3", "--audio-quality", "0")
 	} else {
-		args = append(args, "-f", formatID+"+bestaudio/best")
+		formatArg := buildFormatArg(formatID, isPlaylist)
+		args = append(args, "-f", formatArg)
 	}
 
 	cmd := exec.Command(ytDlpPath, args...)
@@ -96,4 +97,12 @@ func progressStep(symbol string, current int) string {
 		return ""
 	}
 	return symbol
+}
+
+// buildFormatArg constructs the yt-dlp format argument based on quality and playlist mode.
+func buildFormatArg(formatID string, isPlaylist bool) string {
+	if isPlaylist && formatID != "best" {
+		return fmt.Sprintf("bestvideo[height<=%s]+bestaudio/best", formatID)
+	}
+	return "bestvideo+bestaudio/best"
 }

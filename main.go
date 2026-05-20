@@ -107,8 +107,13 @@ func main() {
 					os.Exit(1)
 				}
 			} else {
-				fmt.Println("🚀 Starting playlist download (Best Quality)...")
-				if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, "best", true, false); err != nil {
+				playlistQuality, err := ui.SelectPlaylistQuality()
+				if err != nil {
+					fmt.Printf("Failed to select playlist quality: %v\n", err)
+					os.Exit(1)
+				}
+				fmt.Printf("🚀 Starting playlist download (Quality: %s)...\n", playlistQuality)
+				if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, playlistQuality, true, false); err != nil {
 					fmt.Printf("Failed to download playlist: %v\n", err)
 					os.Exit(1)
 				}
