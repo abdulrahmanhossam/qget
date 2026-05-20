@@ -190,7 +190,6 @@ func DownloadFFmpeg() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to save FFmpeg: %w", err)
 	}
-	file.Close()
 
 	fmt.Println("Download complete. Extracting...")
 

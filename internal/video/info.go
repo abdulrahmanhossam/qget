@@ -6,11 +6,11 @@ import (
 )
 
 type Format struct {
-	FormatID  string `json:"format_id"`
+	FormatID   string `json:"format_id"`
 	Resolution string `json:"resolution"`
-	Ext       string `json:"ext"`
-	Vcodec    string `json:"vcodec"`
-	Height    int    `json:"height"`
+	Ext        string `json:"ext"`
+	Vcodec     string `json:"vcodec"`
+	Height     int    `json:"height"`
 }
 
 type VideoInfo struct {
