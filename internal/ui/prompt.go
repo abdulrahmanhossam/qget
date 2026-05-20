@@ -63,3 +63,28 @@ func SelectQuality() (string, error) {
 	}
 	return "best", nil
 }
+
+// SelectVideoFormat prompts the user to select the final video container format.
+func SelectVideoFormat() (string, error) {
+	var selected string
+	err := survey.AskOne(&survey.Select{
+		Message: "Select final video format:",
+		Options: []string{
+			"🎞️ MP4 (Most Compatible)",
+			"🎬 MKV (Best for High Quality)",
+			"🌐 WEBM (Open Source)",
+		},
+	}, &selected)
+	if err != nil {
+		return "", err
+	}
+	switch selected {
+	case "🎞️ MP4 (Most Compatible)":
+		return "mp4", nil
+	case "🎬 MKV (Best for High Quality)":
+		return "mkv", nil
+	case "🌐 WEBM (Open Source)":
+		return "webm", nil
+	}
+	return "mp4", nil
+}

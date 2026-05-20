@@ -24,7 +24,7 @@ func printProgress(percent float64, width int) {
 	fmt.Printf("\r⏳ Downloading: [%s] %5.1f%%", bar.String(), percent)
 }
 
-func Download(url string, ytDlpPath string, denoPath string, ffmpegPath string, savePath string, formatID string, isPlaylist bool, isAudio bool) error {
+func Download(url string, ytDlpPath string, denoPath string, ffmpegPath string, savePath string, formatID string, isPlaylist bool, isAudio bool, containerFormat string) error {
 	playlistFlag := "--no-playlist"
 	if isPlaylist {
 		playlistFlag = "--yes-playlist"
@@ -43,7 +43,7 @@ func Download(url string, ytDlpPath string, denoPath string, ffmpegPath string, 
 		args = append(args, "-x", "--audio-format", "mp3", "--audio-quality", "0")
 	} else {
 		formatArg := buildFormatArg(formatID, isPlaylist)
-		args = append(args, "-f", formatArg)
+		args = append(args, "-f", formatArg, "--merge-output-format", containerFormat)
 	}
 
 	cmd := exec.Command(ytDlpPath, args...)
