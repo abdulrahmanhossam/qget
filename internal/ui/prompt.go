@@ -51,3 +51,19 @@ func ConfirmPlaylist() (bool, error) {
 	}
 	return confirm, nil
 }
+
+// AskFormatType prompts the user to choose between video or audio-only download.
+func AskFormatType() (string, error) {
+	var selected string
+	err := survey.AskOne(&survey.Select{
+		Message: "What do you want to download?",
+		Options: []string{"🎥 Video", "🎵 Audio Only (MP3)"},
+	}, &selected)
+	if err != nil {
+		return "", err
+	}
+	if selected == "🎥 Video" {
+		return "video", nil
+	}
+	return "audio", nil
+}
