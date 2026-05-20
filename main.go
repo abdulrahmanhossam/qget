@@ -107,13 +107,13 @@ func main() {
 					os.Exit(1)
 				}
 			} else {
-				playlistQuality, err := ui.SelectPlaylistQuality()
+				quality, err := ui.SelectQuality()
 				if err != nil {
-					fmt.Printf("Failed to select playlist quality: %v\n", err)
+					fmt.Printf("Failed to select quality: %v\n", err)
 					os.Exit(1)
 				}
-				fmt.Printf("🚀 Starting playlist download (Quality: %s)...\n", playlistQuality)
-				if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, playlistQuality, true, false); err != nil {
+				fmt.Printf("🚀 Starting playlist download (Quality: %s)...\n", quality)
+				if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, quality, true, false); err != nil {
 					fmt.Printf("Failed to download playlist: %v\n", err)
 					os.Exit(1)
 				}
@@ -147,23 +147,23 @@ func main() {
 		return
 	}
 
-	// Single video flow: fetch video info and let user select quality.
-	fmt.Println("⏳ Fetching video qualities... Please wait.")
-	info, err := video.GetVideoInfo(url, ytDlpPath, denoPath)
+	// Single video flow: fetch title and let user select quality.
+	fmt.Println("⏳ Fetching video info...")
+	title, err := video.GetVideoTitle(url, ytDlpPath, denoPath)
 	if err != nil {
-		fmt.Printf("Failed to get video info: %v\n", err)
+		fmt.Printf("Failed to get video title: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Println("Video Title:", info.Title)
+	fmt.Println("Video Title:", title)
 
-	formatID, err := ui.SelectFormat(info.Formats)
+	quality, err := ui.SelectQuality()
 	if err != nil {
-		fmt.Printf("Failed to select format: %v\n", err)
+		fmt.Printf("Failed to select quality: %v\n", err)
 		os.Exit(1)
 	}
 
-	if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, formatID, false, false); err != nil {
+	if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, quality, false, false); err != nil {
 		fmt.Printf("Failed to download video: %v\n", err)
 		os.Exit(1)
 	}

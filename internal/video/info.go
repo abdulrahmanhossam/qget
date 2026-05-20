@@ -1,35 +1,18 @@
 package video
 
 import (
-	"encoding/json"
 	"os/exec"
+	"strings"
 )
 
-type Format struct {
-	FormatID   string `json:"format_id"`
-	Resolution string `json:"resolution"`
-	Ext        string `json:"ext"`
-	Vcodec     string `json:"vcodec"`
-	Height     int    `json:"height"`
-}
-
-type VideoInfo struct {
-	Title   string   `json:"title"`
-	Formats []Format `json:"formats"`
-}
-
-func GetVideoInfo(url string, ytDlpPath string, denoPath string) (*VideoInfo, error) {
-	cmd := exec.Command(ytDlpPath, "--js-runtimes", "deno:"+denoPath, "--dump-json", "--no-playlist", url)
+// GetVideoTitle fetches the video title using yt-dlp --print for fast extraction.
+func GetVideoTitle(url string, ytDlpPath string, denoPath string) (string, error) {
+	cmd := exec.Command(ytDlpPath, "--js-runtimes", "deno:"+denoPath, "--print", "title", "--no-playlist", url)
 
 	output, err := cmd.Output()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	var videoInfo VideoInfo
-	if err := json.Unmarshal(output, &videoInfo); err != nil {
-		return nil, err
-	}
-
-	return &videoInfo, nil
+	return strings.TrimSpace(string(output)), nil
 }
