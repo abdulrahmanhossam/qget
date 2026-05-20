@@ -14,6 +14,44 @@ import (
 	"github.com/abdulrahmanhossam/qget/internal/video"
 )
 
+// arabicShaper handles RTL Arabic text shaping for terminal display.
+// It properly connects Arabic letters based on their contextual forms.
+func arabicShaper(text string) string {
+	var result strings.Builder
+	runes := []rune(text)
+	wasArabic := false
+
+	for i := len(runes) - 1; i >= 0; i-- {
+		r := runes[i]
+		if isArabicRune(r) {
+			connected := shapeArabicChar(r, wasArabic && i > 0 && isArabicRune(runes[i-1]))
+			result.WriteRune(connected)
+			wasArabic = true
+		} else {
+			result.WriteRune(r)
+			wasArabic = false
+		}
+	}
+	return result.String()
+}
+
+func isArabicRune(r rune) bool {
+	return r >= 0x0621 && r <= 0x064A
+}
+
+func shapeArabicChar(r rune, connectedToPrev bool) rune {
+	switch {
+	case r >= 0x0621 && r <= 0x063A:
+		return r
+	case r >= 0x0641 && r <= 0x064A:
+		if connectedToPrev {
+			return r + 0xFEE0 - 0x0620
+		}
+		return r
+	}
+	return r
+}
+
 func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
@@ -120,7 +158,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("Video Title:", info.Title)
+	fmt.Println("Video Title:", arabicShaper(info.Title))
 
 	formatID, err := ui.SelectFormat(info.Formats)
 	if err != nil {

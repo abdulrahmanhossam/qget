@@ -38,6 +38,7 @@ func Download(url string, ytDlpPath string, denoPath string, ffmpegPath string, 
 	}
 
 	args := []string{
+		"--newline",
 		"--js-runtimes", "deno:" + denoPath,
 		"--ffmpeg-location", ffmpegPath,
 		"-f", formatID + "+bestaudio/best",
