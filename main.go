@@ -94,11 +94,24 @@ func main() {
 		}
 
 		if confirm {
-			// Download entire playlist at best quality (skip quality selection).
-			fmt.Println("🚀 Starting playlist download (Best Quality)...")
-			if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, "best", true); err != nil {
-				fmt.Printf("Failed to download playlist: %v\n", err)
+			formatType, err := ui.AskFormatType()
+			if err != nil {
+				fmt.Printf("Failed to get format type: %v\n", err)
 				os.Exit(1)
+			}
+
+			if formatType == "audio" {
+				fmt.Println("🎵 Starting Audio Download (MP3)...")
+				if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, "", true, true); err != nil {
+					fmt.Printf("Failed to download playlist: %v\n", err)
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("🚀 Starting playlist download (Best Quality)...")
+				if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, "best", true, false); err != nil {
+					fmt.Printf("Failed to download playlist: %v\n", err)
+					os.Exit(1)
+				}
 			}
 			fmt.Println("Download complete!")
 			return
@@ -110,6 +123,23 @@ func main() {
 			fmt.Println("Error: This is a playlist-only URL. There is no single video to fetch qualities for.")
 			os.Exit(1)
 		}
+	}
+
+	// Ask user whether they want video or audio-only download.
+	formatType, err := ui.AskFormatType()
+	if err != nil {
+		fmt.Printf("Failed to get format type: %v\n", err)
+		os.Exit(1)
+	}
+
+	if formatType == "audio" {
+		fmt.Println("🎵 Starting Audio Download (MP3)...")
+		if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, "", false, true); err != nil {
+			fmt.Printf("Failed to download audio: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("Download complete!")
+		return
 	}
 
 	// Single video flow: fetch video info and let user select quality.
@@ -128,7 +158,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, formatID, false); err != nil {
+	if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, formatID, false, false); err != nil {
 		fmt.Printf("Failed to download video: %v\n", err)
 		os.Exit(1)
 	}
