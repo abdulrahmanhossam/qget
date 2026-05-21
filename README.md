@@ -2,13 +2,23 @@
 
 A Go-based CLI tool that simplifies video downloading with zero manual setup.
 
-## Key Features
+## Quick Install / Update (Linux)
+
+```bash
+curl -sL https://raw.githubusercontent.com/abdulrahmanhossam/qget/main/install.sh | bash
+```
+
+## Features
 
 - **Auto-detection and installation** of `yt-dlp`, `Deno`, and `FFmpeg`
 - **Interactive Quality Selection** - choose your preferred video format
 - **Intelligent Playlist Support** - download single videos or entire playlists
 - **Cross-platform support** (Linux/Windows)
 - **Interactive Mode** - run without arguments for a guided experience
+- **Minimalist single-line progress bar** for clean download visualization
+- **Audio-only (MP3) extraction** for music and podcast downloads
+- **Unified smart quality selection** for playlists and single videos
+- **Custom output directories** via `-o` flag
 
 ## Installation
 
@@ -41,6 +51,14 @@ sudo mv qget-linux /usr/local/bin/qget
 
 3. Now simply type `qget` from anywhere in your terminal.
 
+### Build from source
+
+```bash
+go build -ldflags="-s -w" -o qget main.go
+```
+
+The `-ldflags="-s -w"` strips debugging information for an extremely small binary.
+
 ## Usage
 
 ```bash
@@ -49,6 +67,9 @@ qget
 
 # Direct download
 qget "https://youtube.com/watch?v=..."
+
+# Custom output directory
+qget -o ~/Videos "https://youtube.com/watch?v=..."
 ```
 
 ## License
