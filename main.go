@@ -1,16 +1,17 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/abdulrahmanhossam/qget/internal/deps"
 	"github.com/abdulrahmanhossam/qget/internal/ui"
-	"github.com/abdulrahmanhossam/qget/internal/utils"
 	"github.com/abdulrahmanhossam/qget/internal/video"
 )
 
@@ -23,10 +24,19 @@ func main() {
 		os.Exit(0)
 	}()
 
+	outputDir := flag.String("o", ".", "Output directory for the downloaded file")
+	flag.Parse()
+
+	absOutputDir, err := filepath.Abs(*outputDir)
+	if err != nil {
+		fmt.Printf("Failed to resolve output path: %v\n", err)
+		os.Exit(1)
+	}
+
 	var url string
 
-	if len(os.Args) > 1 {
-		url = os.Args[1]
+	if len(flag.Args()) > 0 {
+		url = flag.Args()[0]
 	} else {
 		fmt.Println("No URL provided. Launching interactive mode...")
 		prompt := &survey.Input{
@@ -78,8 +88,7 @@ func main() {
 	}
 	fmt.Printf("Using FFmpeg at: %s\n", ffmpegPath)
 
-	savePath := utils.GetDownloadsDir()
-	fmt.Printf("Saving to: %s\n", savePath)
+	fmt.Printf("Saving to: %s\n", absOutputDir)
 
 	isPlaylist := strings.Contains(url, "list=")
 
@@ -99,7 +108,7 @@ func main() {
 
 			if formatType == "audio" {
 				fmt.Println("Starting Audio Download (MP3)...")
-				if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, "", true, true, ""); err != nil {
+				if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, absOutputDir, "", true, true, ""); err != nil {
 					fmt.Printf("Failed to download playlist: %v\n", err)
 					os.Exit(1)
 				}
@@ -124,7 +133,7 @@ func main() {
 				}
 
 				fmt.Printf("Starting playlist download (Quality: %s, Format: %s)...\n", quality, containerFormat)
-				if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, quality, true, false, containerFormat); err != nil {
+				if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, absOutputDir, quality, true, false, containerFormat); err != nil {
 					fmt.Printf("Failed to download playlist: %v\n", err)
 					os.Exit(1)
 				}
@@ -148,7 +157,7 @@ func main() {
 
 	if formatType == "audio" {
 		fmt.Println("Starting Audio Download (MP3)...")
-		if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, "", false, true, ""); err != nil {
+		if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, absOutputDir, "", false, true, ""); err != nil {
 			fmt.Printf("Failed to download audio: %v\n", err)
 			os.Exit(1)
 		}
@@ -184,7 +193,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, savePath, quality, false, false, containerFormat); err != nil {
+	if err := video.Download(url, ytDlpPath, denoPath, ffmpegPath, absOutputDir, quality, false, false, containerFormat); err != nil {
 		fmt.Printf("Failed to download video: %v\n", err)
 		os.Exit(1)
 	}
