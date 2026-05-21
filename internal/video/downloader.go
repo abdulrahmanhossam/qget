@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -24,7 +23,7 @@ func printProgress(percent float64, width int) {
 	fmt.Printf("\r⏳ Downloading: [%s] %5.1f%%", bar.String(), percent)
 }
 
-func Download(url string, ytDlpPath string, denoPath string, ffmpegPath string, savePath string, formatID string, isPlaylist bool, isAudio bool, containerFormat string) error {
+func Download(url string, ytDlpPath string, denoPath string, ffmpegPath string, outputDir string, formatID string, isPlaylist bool, isAudio bool, containerFormat string) error {
 	playlistFlag := "--no-playlist"
 	if isPlaylist {
 		playlistFlag = "--yes-playlist"
@@ -34,7 +33,8 @@ func Download(url string, ytDlpPath string, denoPath string, ffmpegPath string, 
 		"--newline",
 		"--js-runtimes", "deno:" + denoPath,
 		"--ffmpeg-location", ffmpegPath,
-		"-o", filepath.Join(savePath, "%(title)s.%(ext)s"),
+		"--paths", outputDir,
+		"-o", "%(title)s.%(ext)s",
 		playlistFlag,
 		url,
 	}
