@@ -14,6 +14,8 @@ var downloadProgressRegex = regexp.MustCompile(`\[download\]\s+([0-9]{1,3}\.[0-9
 
 var playlistIndexRegex = regexp.MustCompile(`\[download\]\s+Downloading\s+video\s+([0-9]+)\s+of\s+([0-9]+)`)
 
+var resumeRegex = regexp.MustCompile(`\[download\]\s+Resuming download`)
+
 func printProgress(percent float64, width int) {
 	filled := int(float64(width) * percent / 100)
 	var bar strings.Builder
@@ -31,6 +33,7 @@ func Download(url string, ytDlpPath string, denoPath string, ffmpegPath string, 
 
 	args := []string{
 		"--newline",
+		"--continue",
 		"--js-runtimes", "deno:" + denoPath,
 		"--ffmpeg-location", ffmpegPath,
 		"--paths", outputDir,
@@ -66,6 +69,11 @@ func Download(url string, ytDlpPath string, denoPath string, ffmpegPath string, 
 
 	for scanner.Scan() {
 		line := scanner.Text()
+
+		// Skip resume messages - they don't contain percentage info
+		if resumeRegex.MatchString(line) {
+			continue
+		}
 
 		if match := playlistIndexRegex.FindStringSubmatch(line); len(match) == 3 {
 			currentVideo, _ = strconv.Atoi(match[1])
