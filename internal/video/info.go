@@ -9,8 +9,7 @@ import (
 
 // Format represents a video format from yt-dlp JSON output.
 type Format struct {
-	Height int    `json:"height"`
-	Ext    string `json:"ext"`
+	Height int `json:"height"`
 }
 
 // VideoInfo represents video metadata from yt-dlp.
