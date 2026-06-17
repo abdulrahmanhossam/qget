@@ -14,6 +14,8 @@ var downloadProgressRegex = regexp.MustCompile(`\[download\]\s+([0-9]{1,3}\.[0-9
 
 var playlistIndexRegex = regexp.MustCompile(`\[download\]\s+Downloading\s+video\s+([0-9]+)\s+of\s+([0-9]+)`)
 
+var itemIndexRegex = regexp.MustCompile(`\[download\]\s+Downloading\s+item\s+([0-9]+)\s+of\s+([0-9]+)`)
+
 var resumeRegex = regexp.MustCompile(`\[download\]\s+Resuming download`)
 
 func printProgress(percent float64, width int) {
@@ -75,18 +77,30 @@ func Download(url string, ytDlpPath string, denoPath string, ffmpegPath string, 
 			continue
 		}
 
+		if match := itemIndexRegex.FindStringSubmatch(line); len(match) == 3 {
+			video, _ := strconv.Atoi(match[1])
+			total, _ := strconv.Atoi(match[2])
+			if total > 0 && video != currentVideo {
+				currentVideo = video
+				totalVideos = total
+				fmt.Printf("\n==> Downloading video %d of %d...\n", currentVideo, totalVideos)
+			}
+			continue
+		}
+
 		if match := playlistIndexRegex.FindStringSubmatch(line); len(match) == 3 {
-			currentVideo, _ = strconv.Atoi(match[1])
-			totalVideos, _ = strconv.Atoi(match[2])
+			video, _ := strconv.Atoi(match[1])
+			total, _ := strconv.Atoi(match[2])
+			if total > 0 && video != currentVideo {
+				currentVideo = video
+				totalVideos = total
+				fmt.Printf("\n==> Downloading video %d of %d...\n", currentVideo, totalVideos)
+			}
+			continue
 		}
 
 		if match := downloadProgressRegex.FindStringSubmatch(line); len(match) == 2 {
 			percent, _ := strconv.ParseFloat(match[1], 64)
-
-			if isPlaylist && totalVideos > 0 {
-				fmt.Printf("\r⏳ [%s %d/%d] ", progressStep("↓", currentVideo), currentVideo, totalVideos)
-			}
-
 			printProgress(percent, barWidth)
 		}
 	}
@@ -98,13 +112,6 @@ func Download(url string, ytDlpPath string, denoPath string, ffmpegPath string, 
 	}
 
 	return nil
-}
-
-func progressStep(symbol string, current int) string {
-	if current == 0 {
-		return ""
-	}
-	return symbol
 }
 
 // buildFormatArg constructs the yt-dlp format argument based on quality and playlist mode.
