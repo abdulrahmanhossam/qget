@@ -4,16 +4,69 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"syscall"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/abdulrahmanhossam/qget/internal/deps"
 	"github.com/abdulrahmanhossam/qget/internal/ui"
+	"github.com/abdulrahmanhossam/qget/internal/utils"
 	"github.com/abdulrahmanhossam/qget/internal/video"
 )
+
+func UpdateDependencies() {
+	appDir, err := utils.GetAppDir()
+	if err != nil {
+		fmt.Printf("Failed to get app directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	ytDlpName := "yt-dlp"
+	if runtime.GOOS == "windows" {
+		ytDlpName = "yt-dlp.exe"
+	}
+	ytDlpPath := filepath.Join(appDir, ytDlpName)
+	if _, err := os.Stat(ytDlpPath); os.IsNotExist(err) {
+		fmt.Println("yt-dlp not found. Downloading...")
+		downloadedPath, err := deps.DownloadYTDLP()
+		if err != nil {
+			fmt.Printf("Failed to download yt-dlp: %v\n", err)
+			os.Exit(1)
+		}
+		ytDlpPath = downloadedPath
+	}
+	fmt.Println("==> Updating yt-dlp...")
+	cmd := exec.Command(ytDlpPath, "-U")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("Failed to update yt-dlp: %v\n", err)
+		os.Exit(1)
+	}
+
+	denoName := "deno"
+	if runtime.GOOS == "windows" {
+		denoName = "deno.exe"
+	}
+	denoPath := filepath.Join(appDir, denoName)
+	if _, err := os.Stat(denoPath); err == nil {
+		fmt.Println("==> Updating Deno runtime...")
+		cmd := exec.Command(denoPath, "upgrade")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("Failed to update Deno: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	fmt.Println("==> Update complete!")
+	os.Exit(0)
+}
 
 func main() {
 	sigChan := make(chan os.Signal, 1)
@@ -25,7 +78,12 @@ func main() {
 	}()
 
 	outputDir := flag.String("o", ".", "Output directory for the downloaded file")
+	updateDeps := flag.Bool("update", false, "Update yt-dlp and Deno to the latest versions")
 	flag.Parse()
+
+	if *updateDeps {
+		UpdateDependencies()
+	}
 
 	absOutputDir, err := filepath.Abs(*outputDir)
 	if err != nil {
@@ -51,7 +109,6 @@ func main() {
 			os.Exit(0)
 		}
 	}
-
 	ytDlpFound, ytDlpPath := deps.CheckYTDLP()
 	if !ytDlpFound {
 		fmt.Println("yt-dlp not found. Downloading...")
